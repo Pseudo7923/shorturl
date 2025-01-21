@@ -3,7 +3,7 @@ const cors = require("cors");
 const mysql = require("mysql2"); // Use mysql2 for async/await support
 const dotenv = require("dotenv");
 const app = express();
-
+const {v4:uuidv4} = require('uuid')
 dotenv.config();
 app.use(cors());
 app.use(express.json());
@@ -31,11 +31,19 @@ async function connectDB() {
 connectDB();
 
 // UUID generator
+function generateShortUUID() {
+  const fullUUID = uuidv4();  // Generate a full UUID
+  return fullUUID.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);  // Clean and shorten it to 6 characters
+}
+
+
 app.post("/api/create-short-url", async (request, response) => {
-  let uniqueID = Math.random()
-    .toString(36)
-    .replace(/[^a-z0-9]/gi, "")
-    .substr(2, 10);
+  // let uniqueID = Math.random()
+  //   .toString(36)
+  //   .replace(/[^a-z0-9]/gi, "")
+  //   .substr(2, 10);
+
+  let uniqueID = generateShortUUID()
 
   let sql = `INSERT INTO links(longurl,shorturlid) VALUES(?, ?)`;
   try {
