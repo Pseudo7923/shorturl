@@ -5,63 +5,58 @@ function ShortenLink(props) {
   const { data } = props;
 
   const copyToClipboard = (value) => {
-    let copyText = "https://url-api-ashy.vercel.app/" + value;
+    let copyText = "http://localhost:5000/" + value;
     let isCopy = copy(copyText);
     if (isCopy) {
-      alert(`Short URL Copied  ${copyText}`);
+      alert(`Short URL Copied: ${copyText}`);
     }
   };
 
   return (
     <>
-      <h1 className="self-center text-2xl font-bold">Shorten Links</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full sm:w-3/4">
-          <thead className="bg-green-900 text-white">
+      <h1 className="self-center text-2xl font-semibold text-gray-800 mb-6">Shorten Links</h1>
+      <div className="overflow-x-auto shadow-lg rounded-lg border bg-white p-4">
+        <table className="min-w-full table-auto">
+          <thead className="bg-blue-600 text-white">
             <tr>
-              <th className="border-[1px] border-black p-2">LongURL</th>
-              <th className="border-[1px] border-black p-2">ShortURL</th>
-              <th className="border-[1px] border-black p-2">Count</th>
+              <th className="border-b py-2 px-4 text-left">Long URL</th>
+              <th className="border-b py-2 px-4 text-left">Short URL</th>
+              <th className="border-b py-2 px-4 text-left">Count</th>
             </tr>
           </thead>
           <tbody>
             {!data ? (
-              <tr key={data.id} id={data.id} className="bg-green-100 text-sm">
-                <td className="text-wrap border-[1px] border-gray-800 p-2">
+              <tr key="loading" className="bg-gray-100">
+                <td className="border-b py-2 px-4">Loading...</td>
+                <td className="border-b py-2 px-4 text-center text-red-600">
                   Loading...
-                </td>
-                <td className="flex items-center justify-between gap-2 text-wrap border-[1px] border-gray-800 p-2 text-center text-red-600">
-                  Loading...
-                  <button onClick={() => copyToClipboard(data.shorturlid)}>
-                    <LuClipboardCopy className="cursor-pointer text-lg text-black transition-all ease-in hover:scale-110" />
+                  <button onClick={() => copyToClipboard("loading")}>
+                    <LuClipboardCopy className="cursor-pointer text-xl text-gray-600 transition-all ease-in hover:scale-110" />
                   </button>
                 </td>
-                <td className="text-wrap border-[1px] border-gray-800 p-2 text-center">
-                  Loading...
-                </td>
+                <td className="border-b py-2 px-4 text-center">Loading...</td>
               </tr>
             ) : (
-              data.toReversed().map((data) => (
-                <tr key={data.id} id={data.id} className="bg-green-100 text-sm">
-                  <td className="text-wrap border-[1px] border-gray-800 p-2">
-                    {data.longurl}
-                  </td>
-                  <td className="flex items-center justify-between gap-2 text-wrap border-[1px] border-gray-800 p-2 text-center text-red-600">
+              data.reverse().map((dataItem) => (
+                <tr key={dataItem.id} className="bg-gray-100">
+                  <td className="border-b py-2 px-4">{dataItem.longurl}</td>
+                  <td className="border-b py-2 px-4 text-center text-blue-600">
                     <a
-                      href={
-                        "https://url-api-ashy.vercel.app/" + data.shorturlid
-                      }
+                      href={`http://localhost:5000/${dataItem.shorturlid}`}
                       target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
                     >
-                      {data.shorturlid}
+                      {dataItem.shorturlid}
                     </a>
-                    <button onClick={() => copyToClipboard(data.shorturlid)}>
-                      <LuClipboardCopy className="cursor-pointer text-lg text-black transition-all ease-in hover:scale-110" />
+                    <button
+                      onClick={() => copyToClipboard(dataItem.shorturlid)}
+                      className="ml-2 text-xl text-gray-600 hover:text-gray-800"
+                    >
+                      <LuClipboardCopy className="cursor-pointer transition-all ease-in hover:scale-110" />
                     </button>
                   </td>
-                  <td className="text-wrap border-[1px] border-gray-800 p-2 text-center">
-                    {data.count}
-                  </td>
+                  <td className="border-b py-2 px-4 text-center">{dataItem.count}</td>
                 </tr>
               ))
             )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import ErrorComponent from "./ErrorComponent";
 import ShortenLink from "./ShortenLink";
 
@@ -9,21 +10,11 @@ function Home() {
   const [refresh, setRefresh] = useState(false);
   const [message, setMessage] = useState("");
 
-  const url = "https://url-api-ashy.vercel.app";
+  const url = "http://localhost:5000";
 
   function validateUrl(url) {
-    // Convert URL to lowercase to ensure case-insensitive comparison
     const lowercasedURL = url.toLowerCase();
-
-    // Check if the URL starts with "http://" or "https://"
-    if (
-      lowercasedURL.startsWith("http://") ||
-      lowercasedURL.startsWith("https://")
-    ) {
-      return true;
-    } else {
-      return false;
-    }
+    return lowercasedURL.startsWith("http://") || lowercasedURL.startsWith("https://");
   }
 
   function onChangeHandler(event) {
@@ -31,81 +22,83 @@ function Home() {
   }
 
   useEffect(() => {
-    async function fetcData(api) {
-      const res = await fetch(api);
-      const data = await res.json();
-      setUrlData(data);
-      const latestValue = data[data.length - 1];
-      const link = `https://url-api-ashy.vercel.app/${latestValue.shorturlid}`;
-      setMessage(link);
+    async function fetchData(api) {
+      try {
+        const response = await axios.get(api);
+        setUrlData(response?.data);
+        const latestValue = response.data[response?.data?.length - 1];
+        const link = `${url}/${latestValue?.shorturlid}`;
+        // setMessage(link);
+      } catch (error) {
+        setError(true);
+        setMessage("Error fetching data: " + error.message);
+      }
     }
 
-    fetcData(url + "/api/get-all-short-urls");
+    fetchData(url + "/api/get-all-short-urls");
   }, [refresh]);
 
   async function onSubmitHandler(event) {
     event.preventDefault();
-    if (validateUrl(input) === false) {
+    if (!validateUrl(input)) {
       setError(true);
       setMessage("Enter a valid link starting with http:// or https://");
       return;
     }
     try {
-      const res = await fetch(url + "/api/create-short-url", {
-        method: "POST",
-        body: JSON.stringify({
-          longurl: input,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await axios.post(url + "/api/create-short-url", {
+        longurl: input,
       });
-      const data = await res.json();
-      if (data.status === "ok") {
-        setError(true);
+
+      if (response?.data?.status === "ok") {
+        setError(false);
         setInput("");
-        setRefresh((old) => !old);
-        console.log(input, "form submitted");
+        setRefresh((prev) => !prev);
+      // console.log(response.data);
+        setMessage(`${url}/${response?.data?.shorturlid}`);
+      
       }
     } catch (error) {
       setError(true);
-      setMessage(error.message);
-      console.log(error);
+      setMessage("Error submitting URL: " + error.message);
+      console.error(error);
     }
   }
 
   return (
-    <>
-      <div className="flex flex-col items-center justify-center gap-9 p-4">
-        <h1 className="self-start text-4xl font-bold">Create Short URL</h1>
-        <div className="flex h-2/3 flex-col rounded-lg bg-blue-100 px-20 py-16 sm:w-2/4">
-          <form
-            className="flex w-full flex-col items-center gap-6"
-            onSubmit={onSubmitHandler}
+    <div className="flex flex-col items-center justify-center gap-9 p-8 bg-gray-50 min-h-screen">
+      <h1 className="text-4xl font-bold text-gray-800 mb-6">Create Short URL</h1>
+      
+      <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg w-full sm:w-2/4">
+        <form
+          className="flex flex-col w-full gap-6"
+          onSubmit={onSubmitHandler}
+        >
+          <label htmlFor="url" className="self-start text-lg font-medium text-gray-700">
+            Enter Link
+          </label>
+          <input
+            type="text"
+            value={input}
+            onChange={onChangeHandler}
+            placeholder="http://example.com"
+            id="url"
+            className="h-12 w-full border-2 border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+           {error ? <ErrorComponent message={message} className="bg-red-100"/> :  <>{message}</>}
+          <button
+            type="submit"
+            className="h-12 w-full bg-blue-600 text-white rounded-md transition-all ease-in-out transform hover:bg-blue-700 hover:scale-105"
           >
-            <label htmlFor="url" className="self-start">
-              Enter Link
-            </label>
-            <input
-              type="text"
-              value={input}
-              onChange={onChangeHandler}
-              placeholder="http://site.com"
-              id="url"
-              className={`h-10 w-full border-2 p-3 focus:outline-none`}
-            />
-            {error && <ErrorComponent message={message} />}
-            <input
-              type="submit"
-              className="h-10 w-full bg-black text-white transition-all ease-in hover:cursor-pointer hover:bg-gray-800"
-              value="Create short URL"
-            />
-          </form>
-        </div>
+            Create Short URL
+          </button>
+        </form>
+      </div>
 
+      <div className="mt-8 w-full sm:w-2/4">
         <ShortenLink data={urlData} />
       </div>
-    </>
+    </div>
   );
 }
 
